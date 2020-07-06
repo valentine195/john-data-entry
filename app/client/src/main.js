@@ -12,10 +12,18 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.min.js';
 import '@fortawesome/fontawesome-free/css/all.css';
 
+import VCalendar from 'v-calendar';
+
+Vue.use(VCalendar)
+
 Vue.config.productionTip = false
 
 new Vue({
   router,
   store,
-  render: h => h(App)
+  render: h => h(App),
+  created() {
+    // Prevent blank screen in Electron builds
+    this.$router.push('/')
+  }
 }).$mount('#app')

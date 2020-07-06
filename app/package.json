@@ -1,8 +1,8 @@
 {
-  "name": "app",
-  "productName": "app",
+  "name": "packagingplus",
+  "productName": "Packaging Plus Invoice Entry",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Packaging Plus Invoice Entry",
   "main": "src/index.js",
   "scripts": {
     "start": "electron-forge start",
@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.0",
+    "exceljs": "^4.1.0",
     "fs-jetpack": "^2.3.0"
   },
   "devDependencies": {
