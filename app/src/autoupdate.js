@@ -3,9 +3,8 @@ import os from 'os';
 import {app, autoUpdater, dialog} from 'electron';
 const version = app.getVersion();
 const platform = os.platform() + '_' + os.arch();  // usually returns darwin_64
-
-const updaterFeedURL = 'http://zulipdesktop.herokuapp.com/update/' + platform + '/' + version;
-// replace updaterFeedURL with http://yourappname.herokuapp.com
+const server = 'https://hazel.valentine195.vercel.app/'
+const updaterFeedURL = `${server}/update/${process.platform}/${app.getVersion()}`
 
 function appUpdater() {
 	autoUpdater.setFeedURL(updaterFeedURL);
