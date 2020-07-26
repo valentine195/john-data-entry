@@ -45,7 +45,9 @@
     }
   },
   "dependencies": {
+    "electron-is-dev": "^1.2.0",
     "electron-squirrel-startup": "^1.0.0",
+    "esm": "^3.2.25",
     "exceljs": "^4.1.0",
     "fs-jetpack": "^2.3.0"
   },

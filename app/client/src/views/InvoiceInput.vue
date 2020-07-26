@@ -28,13 +28,14 @@ div.home.p-3
                 label.form-check-label(:for="payment") {{ payment }}
     div.buttons.d-flex.justify-content-end
       button.mr-2.btn.btn-outline-danger(type='cancel') Cancel
-      button.btn.btn-primary(type='submit') Submit
+      button.btn.btn-primary(type='submit' @click='submit') Submit
 
 </template>
 
 <script>
 import InvoiceEntry from '../components/InvoiceEntry'
 import moment from 'moment';
+import { ipcRenderer } from 'electron';
 
 window.moment = moment;
 
@@ -81,6 +82,8 @@ export default {
 
     },
     submit: function() {
+
+      ipcRenderer.send('invoice-submitted', {invoice: this.invoice});
 
     }
   }
