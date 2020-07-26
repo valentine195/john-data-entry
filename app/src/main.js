@@ -9,22 +9,26 @@ import jetpack from 'fs-jetpack';
 import path from 'path';
 
 import './excel';
-import { loadWorkbook, insertData, worksheet } from './excel';
+import {
+    loadWorkbook,
+    insertData,
+    worksheet
+} from './excel';
 
-import isDev from 'electron-is-dev';  // this is required to check if the app is running in development mode. 
+import isDev from 'electron-is-dev'; // this is required to check if the app is running in development mode. 
 import appUpdater from './autoupdate';
 
 /* Handling squirrel.windows events on windows 
 only required if you have build the windows with target squirrel. For NSIS target you don't need it. */
 if (import('electron-squirrel-startup')) {
-	app.quit();
+    app.quit();
 }
 
 let mainWindow;
 
 // Funtion to check the current OS. As of now there is no proper method to add auto-updates to linux platform.
 function isWindowsOrmacOS() {
-	return process.platform === 'darwin' || process.platform === 'win32';
+    return process.platform === 'darwin' || process.platform === 'win32';
 }
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -58,50 +62,51 @@ let workbook;
 
         createWindow();
 
+        console.log("userConfig", userConfig)
         if (!userConfig.pathToExcelFile.length || !jetpack.exists(userConfig.pathToExcelFile)) {
 
-            dialog.showMessageBox({
+            let response = dialog.showMessageBoxSync({
                 type: 'question',
                 title: "Excel File",
                 message: "An excel file could not be found. Do you wish to create a new one or select an existing?",
                 buttons: ['Create', 'Select'],
                 defaultId: 0
-            }).then(async ({
-                response
-            }) => {
+            })
+            /* .then(async ({
+                            response
+                        }) => { */
 
-                if (response == 0) {
-                    let savePath = await dialog.showSaveDialog({
-                        title: "Create new invoice workbook...",
-                        defaultPath: "PackagingPlusInvoices.xlsx",
-                        properties: ["createDirectory"]
-                    });
+            if (response == 0) {
+                let savePath = await dialog.showSaveDialog({
+                    title: "Create new invoice workbook...",
+                    defaultPath: "PackagingPlusInvoices.xlsx",
+                    properties: ["createDirectory"]
+                });
 
-                    if (savePath.canceled) {
-                        dialog.showErrorBox('An excel file must be created. Quitting app.');
-                        app.quit();
-                    }
-
-                    userConfig.pathToExcelFile = savePath.filePath;
-
-                    await jetpack.write(path.join(app.getPath("userData"), 'config.json'), userConfig);
-
-                }
-                if (response == 1) {
-
-                    let selectedWorkbook = await dialog.showOpenDialog({});
-
-                    if (selectedWorkbook.canceled) {
-                        dialog.showErrorBox('An excel file must be created. Quitting app.');
-                        app.quit();
-                    }
-                    userConfig.pathToExcelFile = savePath.filePath;
-                    await jetpack.write(path.join(app.getPath("userData"), 'config.json'), userConfig);
-
+                if (savePath.canceled) {
+                    dialog.showErrorBox('An excel file must be created. Quitting app.');
+                    app.quit();
                 }
 
-            });
+                userConfig.pathToExcelFile = savePath.filePath;
 
+                await jetpack.write(path.join(app.getPath("userData"), 'config.json'), userConfig);
+
+            }
+            if (response == 1) {
+
+                let selectedWorkbook = await dialog.showOpenDialog({});
+
+                if (selectedWorkbook.canceled) {
+                    dialog.showErrorBox('An excel file must be created. Quitting app.');
+                    app.quit();
+                }
+                userConfig.pathToExcelFile = savePath.filePath;
+                await jetpack.write(path.join(app.getPath("userData"), 'config.json'), userConfig);
+
+            }
+            /* 
+                        }); */
         }
 
         workbook = await loadWorkbook(userConfig.pathToExcelFile);
@@ -131,7 +136,9 @@ let workbook;
 
 })()
 
-ipcMain.on('invoice-submitted', async (e, {invoice}) => {
+ipcMain.on('invoice-submitted', async (e, {
+    invoice
+}) => {
 
     await insertData(Object.values(invoice), worksheet);
 
@@ -152,13 +159,13 @@ const createWindow = () => {
     // and load the index.html of the app.
     mainWindow.loadFile(path.join(__dirname, '../client/dist/index.html'));
 
-    
+
     mainWindow.webContents.once('dom-ready', () => {
 
         const checkOS = isWindowsOrmacOS();
         if (checkOS && !isDev) {
-          // Initate auto-updates on macOs and windows
-          appUpdater();
+            // Initate auto-updates on macOs and windows
+            appUpdater();
         };
     })
 
