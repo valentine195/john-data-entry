@@ -20,7 +20,7 @@ import appUpdater from './autoupdate';
 
 /* Handling squirrel.windows events on windows 
 only required if you have build the windows with target squirrel. For NSIS target you don't need it. */
-if (import('electron-squirrel-startup')) {
+if (import('electron-squirrel-startup') && process.platform != 'darwin') {
     app.quit();
 }
 
@@ -31,110 +31,94 @@ function isWindowsOrmacOS() {
     return process.platform === 'darwin' || process.platform === 'win32';
 }
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
-    app.quit();
-}
-
 let userConfig;
 let workbook;
 
-(async () => {
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.on('ready', async () => {
+
 
     if (jetpack.exists(path.join(app.getPath("userData"), 'config.json'))) {
-
-        userConfig = await jetpack.read(path.join(app.getPath("userData"), 'config.json', ), 'json');
-
-    } else {
-
+        
+        userConfig = await jetpack.readAsync(path.join(app.getPath("userData"), 'config.json', ), 'json');
+        console.log(51, userConfig)
+        
+    } else {    
         userConfig = {
             "pathToExcelFile": ''
         };
-        await jetpack.write(path.join(app.getPath("userData"), 'config.json'), userConfig)
+        await jetpack.writeAsync(path.join(app.getPath("userData"), 'config.json'), JSON.stringify(userConfig))
+        
+    }
+    
+    createWindow();
+    if (!userConfig.pathToExcelFile.length || !jetpack.exists(userConfig.pathToExcelFile)) {
+        console.log('66')
+        let response = dialog.showMessageBoxSync({
+            type: 'question',
+            title: "Excel File",
+            message: "An excel file could not be found. Do you wish to create a new one or select an existing?",
+            buttons: ['Create', 'Select'],
+            defaultId: 0
+        });
+        if (response == 1) {
+
+            let selectedWorkbook = dialog.showOpenDialogSync({});
+
+            if (selectedWorkbook.canceled) {
+                dialog.showErrorBox('An excel file must be created. Quitting app.');
+                app.quit();
+            }
+            console.log(79, selectedWorkbook)
+            userConfig.pathToExcelFile = selectedWorkbook[0];
+            await jetpack.write(path.join(app.getPath("userData"), 'config.json'), JSON.stringify(userConfig));
+
+        } else {
+            let savePath = dialog.showSaveDialogSync({
+                title: "Create new invoice workbook...",
+                defaultPath: "PackagingPlusInvoices.xlsx",
+                properties: ["createDirectory"]
+            });
+            
+            if (savePath.canceled) {
+                dialog.showErrorBox('An excel file must be created. Quitting app.');
+                app.quit();
+            }
+
+            userConfig.pathToExcelFile = savePath;
+
+            await jetpack.write(path.join(app.getPath("userData"), 'config.json'), JSON.stringify(userConfig));
+
+        }
 
     }
+    workbook = await loadWorkbook(userConfig.pathToExcelFile);
 
-    // This method will be called when Electron has finished
-    // initialization and is ready to create browser windows.
-    // Some APIs can only be used after this event occurs.
-    app.on('ready', async () => {
+});
 
+// Quit when all windows are closed.
+app.on('window-all-closed', () => {
+    // On OS X it is common for applications and their menu bar
+    // to stay active until the user quits explicitly with Cmd + Q
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
+});
 
+app.on('activate', () => {
+    // On OS X it's common to re-create a window in the app when the
+    // dock icon is clicked and there are no other windows open.
+    if (BrowserWindow.getAllWindows().length === 0) {
         createWindow();
+    }
+});
 
-        console.log("userConfig", userConfig)
-        if (!userConfig.pathToExcelFile.length || !jetpack.exists(userConfig.pathToExcelFile)) {
-
-            let response = dialog.showMessageBoxSync({
-                type: 'question',
-                title: "Excel File",
-                message: "An excel file could not be found. Do you wish to create a new one or select an existing?",
-                buttons: ['Create', 'Select'],
-                defaultId: 0
-            })
-            /* .then(async ({
-                            response
-                        }) => { */
-
-            if (response == 0) {
-                let savePath = await dialog.showSaveDialog({
-                    title: "Create new invoice workbook...",
-                    defaultPath: "PackagingPlusInvoices.xlsx",
-                    properties: ["createDirectory"]
-                });
-
-                if (savePath.canceled) {
-                    dialog.showErrorBox('An excel file must be created. Quitting app.');
-                    app.quit();
-                }
-
-                userConfig.pathToExcelFile = savePath.filePath;
-
-                await jetpack.write(path.join(app.getPath("userData"), 'config.json'), userConfig);
-
-            }
-            if (response == 1) {
-
-                let selectedWorkbook = await dialog.showOpenDialog({});
-
-                if (selectedWorkbook.canceled) {
-                    dialog.showErrorBox('An excel file must be created. Quitting app.');
-                    app.quit();
-                }
-                userConfig.pathToExcelFile = savePath.filePath;
-                await jetpack.write(path.join(app.getPath("userData"), 'config.json'), userConfig);
-
-            }
-            /* 
-                        }); */
-        }
-
-        workbook = await loadWorkbook(userConfig.pathToExcelFile);
-
-    });
-
-    // Quit when all windows are closed.
-    app.on('window-all-closed', () => {
-        // On OS X it is common for applications and their menu bar
-        // to stay active until the user quits explicitly with Cmd + Q
-        if (process.platform !== 'darwin') {
-            app.quit();
-        }
-    });
-
-    app.on('activate', () => {
-        // On OS X it's common to re-create a window in the app when the
-        // dock icon is clicked and there are no other windows open.
-        if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow();
-        }
-    });
-
-    // In this file you can include the rest of your app's specific main process
-    // code. You can also put them in separate files and import them here.
+// In this file you can include the rest of your app's specific main process
+// code. You can also put them in separate files and import them here.
 
 
-})()
 
 ipcMain.on('invoice-submitted', async (e, {
     invoice

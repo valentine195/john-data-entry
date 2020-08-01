@@ -7,6 +7,7 @@ export var worksheet;
 
 export const loadWorkbook = async (p) => {
 
+    console.log('path', p);
     path = p;
 
     return new Promise(async (resolve, reject) => {
