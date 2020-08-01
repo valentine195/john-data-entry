@@ -1,9 +1,10 @@
-import {
+const {
     app,
     BrowserWindow,
     ipcMain,
-    dialog
-} from 'electron';
+    dialog,
+    screen
+} = require('electron');
 
 import jetpack from 'fs-jetpack';
 import path from 'path';
@@ -37,8 +38,9 @@ let workbook;
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', async () => {
+app.whenReady().then(async () => {
 
+    createWindow();
 
     if (jetpack.exists(path.join(app.getPath("userData"), 'config.json'))) {
         
@@ -53,9 +55,8 @@ app.on('ready', async () => {
         
     }
     
-    createWindow();
+    
     if (!userConfig.pathToExcelFile.length || !jetpack.exists(userConfig.pathToExcelFile)) {
-        console.log('66')
         let response = dialog.showMessageBoxSync({
             type: 'question',
             title: "Excel File",
@@ -130,16 +131,16 @@ ipcMain.on('invoice-submitted', async (e, {
 
 const createWindow = () => {
     // Create the browser window.
+    console.log(133)
+    const display = screen.getPrimaryDisplay();
     const mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
-        title: "Invoice Entry",
-        icon: path.join(__dirname, 'public/PackagingPlusIcon.png'),
         webPreferences: {
-            nodeIntegration: true,
-        },
-    });
-
+          preload: path.join(__dirname, 'preload.js')
+        }
+      })
+    
     // and load the index.html of the app.
     mainWindow.loadFile(path.join(__dirname, '../client/dist/index.html'));
 

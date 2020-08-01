@@ -1,7 +1,7 @@
 {
   "name": "packagingplus",
   "productName": "packagingplus",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Packaging Plus Invoice Entry",
   "main": "src/index.js",
   "scripts": {
