@@ -77,6 +77,10 @@
   },
   "build": {
     "asarUnpack": [],
+    "appId": "packaging-plus",
+    "win": {
+      "target": "squirrel"
+    },
     "nsis": {
       "artifactName": "${productName}-Setup-${version}.${ext}",
       "oneClick": true,
