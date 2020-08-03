@@ -1,7 +1,7 @@
 {
   "name": "packagingplus",
   "productName": "packagingplus",
-  "version": "1.0.4",
+  "version": "1.0.7",
   "description": "Packaging Plus Invoice Entry",
   "main": "src/index.js",
   "scripts": {
@@ -57,11 +57,14 @@
     }
   },
   "dependencies": {
+    "electron-builder-squirrel-windows": "^22.8.1",
     "electron-is-dev": "^1.2.0",
+    "electron-log": "^4.2.2",
     "electron-squirrel-startup": "^1.0.0",
     "esm": "^3.2.25",
     "exceljs": "^4.1.0",
-    "fs-jetpack": "^2.3.0"
+    "fs-jetpack": "^2.3.0",
+    "xlsx": "^0.16.5"
   },
   "devDependencies": {
     "@electron-forge/cli": "^6.0.0-beta.51",
@@ -69,10 +72,20 @@
     "@electron-forge/maker-rpm": "^6.0.0-beta.51",
     "@electron-forge/maker-squirrel": "^6.0.0-beta.51",
     "@electron-forge/maker-zip": "^6.0.0-beta.51",
-    "electron": "8.2.5"
+    "electron": "8.2.5",
+    "electron-builder": "^22.8.0"
   },
   "build": {
     "asarUnpack": [],
+    "nsis": {
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "oneClick": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": true,
+      "allowToChangeInstallationDirectory": false,
+      "runAfterFinish": true,
+      "differentialPackage": true
+    },
     "files": [
       "**/*",
       "!dev_environment.js",

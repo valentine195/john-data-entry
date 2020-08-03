@@ -13,8 +13,10 @@ import 'bootstrap/dist/js/bootstrap.min.js';
 import '@fortawesome/fontawesome-free/css/all.css';
 
 import VCalendar from 'v-calendar';
+import Notifications from 'vue-notification'
 
-Vue.use(VCalendar)
+Vue.use(VCalendar);
+Vue.use(Notifications);
 
 Vue.config.productionTip = false
 

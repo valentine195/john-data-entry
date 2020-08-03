@@ -192,7 +192,7 @@ export const createSheet = async (name, workbook) => {
             }
         });
         sheet.spliceRows(3, 0, [
-            ["Total"],
+            "Total",
             ...["B","C","D","E","F","G","H","I","J","K","L"].map(l => {return { formula: `SUM(${l}2:${l}2)`, value: 0 }})
         ])
 

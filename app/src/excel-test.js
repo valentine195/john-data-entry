@@ -5,6 +5,4 @@ import { loadWorkbook, insertData, worksheet } from './excel';
     const workbook = await loadWorkbook('../../PackagingPlusInvoices.xlsx');
     console.log(worksheet.name);
 
-    
-
 })()

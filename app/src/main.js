@@ -15,6 +15,9 @@ import {
     insertData,
     worksheet
 } from './excel';
+import log from 'electron-log';
+
+Object.assign(console, log.functions);
 
 import isDev from 'electron-is-dev'; // this is required to check if the app is running in development mode. 
 import appUpdater from './autoupdate';
@@ -22,10 +25,8 @@ import appUpdater from './autoupdate';
 /* Handling squirrel.windows events on windows 
 only required if you have build the windows with target squirrel. For NSIS target you don't need it. */
 if (import('electron-squirrel-startup') && process.platform != 'darwin') {
-    app.quit();
+    //app.quit();
 }
-
-let mainWindow;
 
 // Funtion to check the current OS. As of now there is no proper method to add auto-updates to linux platform.
 function isWindowsOrmacOS() {
@@ -42,10 +43,11 @@ app.whenReady().then(async () => {
 
     createWindow();
 
+    console.log(app.getPath("userData"))
+
     if (jetpack.exists(path.join(app.getPath("userData"), 'config.json'))) {
         
         userConfig = await jetpack.readAsync(path.join(app.getPath("userData"), 'config.json', ), 'json');
-        console.log(51, userConfig)
         
     } else {    
         userConfig = {
@@ -125,19 +127,27 @@ ipcMain.on('invoice-submitted', async (e, {
     invoice
 }) => {
 
-    await insertData(Object.values(invoice), worksheet);
+    insertData(Object.values(invoice), worksheet).then( () => {
+
+        mainWindow.webContents.send('success', {msg: 'Invoice data saved!'});
+
+    }).catch( (e) => {
+
+        mainWindow.webContents.send('error', {msg: 'Invoice submission error. Please try again.'})
+
+    });
 
 })
-
+let mainWindow;
 const createWindow = () => {
     // Create the browser window.
-    console.log(133)
     const display = screen.getPrimaryDisplay();
-    const mainWindow = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
         webPreferences: {
-          preload: path.join(__dirname, 'preload.js')
+          preload: path.join(__dirname, 'preload.js'),
+          nodeIntegration: true
         }
       })
     
@@ -148,7 +158,7 @@ const createWindow = () => {
     mainWindow.webContents.once('dom-ready', () => {
 
         const checkOS = isWindowsOrmacOS();
-        if (checkOS && !isDev) {
+        if (checkOS) {
             // Initate auto-updates on macOs and windows
             appUpdater();
         };

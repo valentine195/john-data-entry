@@ -1,24 +1,35 @@
 <template lang='pug'>
 div#app.d-flex.flex-column.justify-content-between
   router-view.mb-auto
-  //-div
-    hr
-    div.d-flex.align-items-center.justify-content-center
-      ul.mb-2
-        li
-          router-link(to='/input').h5 Input Invoice
-        li
-          span.h5 |
-        li
-          span(to='/view' disabled).h5 View Invoices
+  notifications(group='success')
+  notifications(group='error')
   
 </template>
 <script>
 import InvoiceInput from './views/InvoiceInput'
+import { ipcRenderer } from 'electron';
 export default {
   name: 'App',
   components: {
     InvoiceInput
+  },
+  mounted: function() {
+
+    ipcRenderer.on('success', (e, {msg}) => {
+      this.$notify({
+        group: 'success',
+        text: msg,
+        type: 'success'
+      })
+    })
+    ipcRenderer.on('error', (e, {msg}) => {
+      this.$notify({
+        group: 'error',
+        text: msg,
+        type: 'error'
+      })
+    })
+
   }
 }
 </script>
