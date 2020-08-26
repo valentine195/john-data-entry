@@ -1,14 +1,11 @@
 {
   "name": "packagingplus",
   "productName": "packagingplus",
-  "version": "1.0.7",
+  "version": "1.1.0",
   "description": "Packaging Plus Invoice Entry",
   "main": "src/index.js",
   "scripts": {
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "publish": "electron-forge publish",
+    "start": "electron ./src/index",
     "lint": "echo \"No linting configured\"",
     "build-win": "electron-builder --win -p always"
   },
@@ -18,69 +15,21 @@
     "email": "valentine.195@gmail.com"
   },
   "license": "MIT",
-  "config": {
-    "forge": {
-      "packagerConfig": {},
-      "makers": [
-        {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "name": "app"
-          }
-        },
-        {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "darwin"
-          ]
-        },
-        {
-          "name": "@electron-forge/maker-deb",
-          "config": {}
-        },
-        {
-          "name": "@electron-forge/maker-rpm",
-          "config": {}
-        }
-      ],
-      "publishers": [
-        {
-          "name": "@electron-forge/publisher-github",
-          "config": {
-            "repository": {
-              "owner": "me",
-              "name": "john-data-entry"
-            }
-          }
-        }
-      ]
-    }
-  },
   "dependencies": {
-    "electron-builder-squirrel-windows": "^22.8.1",
     "electron-is-dev": "^1.2.0",
-    "electron-log": "^4.2.2",
-    "electron-squirrel-startup": "^1.0.0",
+    "electron-log": "^4.2.4",
+    "electron-updater": "^4.3.4",
     "esm": "^3.2.25",
-    "exceljs": "^4.1.0",
-    "fs-jetpack": "^2.3.0",
-    "xlsx": "^0.16.5"
+    "exceljs": "^4.1.1",
+    "fs-jetpack": "^2.4.0"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^6.0.0-beta.51",
-    "@electron-forge/maker-deb": "^6.0.0-beta.51",
-    "@electron-forge/maker-rpm": "^6.0.0-beta.51",
-    "@electron-forge/maker-squirrel": "^6.0.0-beta.51",
-    "@electron-forge/maker-zip": "^6.0.0-beta.51",
     "electron": "8.2.5",
     "electron-builder": "^22.8.0"
   },
   "build": {
     "asarUnpack": [],
     "appId": "packaging-plus",
-    "win": {
-      "target": "squirrel"
-    },
     "nsis": {
       "artifactName": "${productName}-Setup-${version}.${ext}",
       "oneClick": true,

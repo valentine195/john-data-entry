@@ -16,17 +16,23 @@ import {
     worksheet
 } from './excel';
 import log from 'electron-log';
+import {
+    autoUpdater
+} from "electron-updater";
+
+autoUpdater.logger = log;
+autoUpdater.setFeedURL({
+    provider: 'github',
+    token: '0cbcebc2550c07518d97dc88acb0f629a8f25d28',
+    owner: 'valentine195',
+    repo: 'john-data-entry',
+    private: true
+});
 
 Object.assign(console, log.functions);
 
-import isDev from 'electron-is-dev'; // this is required to check if the app is running in development mode. 
+import isDev from 'electron-is-dev'; // this is required to check if the app is running in development mode.
 import appUpdater from './autoupdate';
-
-/* Handling squirrel.windows events on windows 
-only required if you have build the windows with target squirrel. For NSIS target you don't need it. */
-if (import('electron-squirrel-startup') && process.platform != 'darwin') {
-    //app.quit();
-}
 
 // Funtion to check the current OS. As of now there is no proper method to add auto-updates to linux platform.
 function isWindowsOrmacOS() {
@@ -46,18 +52,18 @@ app.whenReady().then(async () => {
     console.log(app.getPath("userData"))
 
     if (jetpack.exists(path.join(app.getPath("userData"), 'config.json'))) {
-        
+
         userConfig = await jetpack.readAsync(path.join(app.getPath("userData"), 'config.json', ), 'json');
-        
-    } else {    
+
+    } else {
         userConfig = {
             "pathToExcelFile": ''
         };
         await jetpack.writeAsync(path.join(app.getPath("userData"), 'config.json'), JSON.stringify(userConfig))
-        
+
     }
-    
-    
+
+
     if (!userConfig.pathToExcelFile.length || !jetpack.exists(userConfig.pathToExcelFile)) {
         let response = dialog.showMessageBoxSync({
             type: 'question',
@@ -84,7 +90,7 @@ app.whenReady().then(async () => {
                 defaultPath: "PackagingPlusInvoices.xlsx",
                 properties: ["createDirectory"]
             });
-            
+
             if (savePath.canceled) {
                 dialog.showErrorBox('An excel file must be created. Quitting app.');
                 app.quit();
@@ -100,6 +106,9 @@ app.whenReady().then(async () => {
     workbook = await loadWorkbook(userConfig.pathToExcelFile);
 
 });
+
+
+
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
@@ -126,18 +135,30 @@ app.on('activate', () => {
 ipcMain.on('invoice-submitted', async (e, {
     invoice
 }) => {
-
-    insertData(Object.values(invoice), worksheet).then( () => {
-
-        mainWindow.webContents.send('success', {msg: 'Invoice data saved!'});
-
-    }).catch( (e) => {
-
-        mainWindow.webContents.send('error', {msg: 'Invoice submission error. Please try again.'})
-
+    
+    insertData(Object.values(invoice), worksheet).then(() => {
+        
+        mainWindow.webContents.send('success', {
+            msg: 'Invoice data saved!'
+        });
+        
+    }).catch((e) => {
+        
+        mainWindow.webContents.send('error', {
+            msg: 'Invoice submission error. Please try again.'
+        })
+        
     });
+    
+});
 
-})
+
+ipcMain.on('restart-and-update', async(e) => {
+
+    appUpdater.quitAndInstall();
+
+});
+
 let mainWindow;
 const createWindow = () => {
     // Create the browser window.
@@ -146,11 +167,11 @@ const createWindow = () => {
         width: 800,
         height: 600,
         webPreferences: {
-          preload: path.join(__dirname, 'preload.js'),
-          nodeIntegration: true
+            preload: path.join(__dirname, 'preload.js'),
+            nodeIntegration: true
         }
-      })
-    
+    })
+
     // and load the index.html of the app.
     mainWindow.loadFile(path.join(__dirname, '../client/dist/index.html'));
 
@@ -160,7 +181,23 @@ const createWindow = () => {
         const checkOS = isWindowsOrmacOS();
         if (checkOS) {
             // Initate auto-updates on macOs and windows
-            appUpdater();
+
+            autoUpdater.checkForUpdatesAndNotify();
+
+            autoUpdater.on('update-downloaded', (ev, info) => {
+
+                dialog.showMessageBoxSync({
+                    type: 'info',
+                    title: "Update",
+                    message: "An update has been downloaded. Restart the app to install it!",
+                    buttons: ['OK'],
+                    defaultId: 0
+                });
+
+                autoUpdater.quitAndInstall();
+
+            });
+
         };
     })
 

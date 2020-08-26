@@ -13,6 +13,11 @@ export default {
   components: {
     InvoiceInput
   },
+  methods: {
+    restartAndUpdate() {
+			ipcRenderer.send("restart-and-update");
+    }
+  },
   mounted: function() {
 
     ipcRenderer.on('success', (e, {msg}) => {
@@ -21,14 +26,14 @@ export default {
         text: msg,
         type: 'success'
       })
-    })
+    });
     ipcRenderer.on('error', (e, {msg}) => {
       this.$notify({
         group: 'error',
         text: msg,
         type: 'error'
       })
-    })
+    });
 
   }
 }
