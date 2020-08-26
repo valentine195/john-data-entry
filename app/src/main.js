@@ -150,15 +150,8 @@ ipcMain.on('invoice-submitted', async (e, {
     });
     
 });
-
-
-ipcMain.on('restart-and-update', async(e) => {
-
-    appUpdater.quitAndInstall();
-
-});
-
 let mainWindow;
+
 const createWindow = () => {
     // Create the browser window.
     const display = screen.getPrimaryDisplay();
@@ -184,17 +177,26 @@ const createWindow = () => {
             autoUpdater.checkForUpdatesAndNotify();
 
             autoUpdater.on('update-downloaded', (ev, info) => {
-
-                dialog.showMessageBoxSync({
-                    type: 'info',
-                    title: "Update",
-                    message: "An update has been downloaded. Restart the app to install it!",
-                    buttons: ['OK'],
-                    defaultId: 0
+                
+                const updateDialog = dialog.showMessageBoxSync({
+                    title: "Update Available",
+                    message: "An update has been downloaded. Restart the app so the changes take effect!",
+                    detail: "If you wish to wait to install the update, it will install when the app is closed.",
+                    buttons: ["Restart", "Later"],
+                    defaultId: 0,
+                    cancelId: 1
                 });
 
-                autoUpdater.quitAndInstall();
+                if (updateDialog === 0) {
 
+                    autoUpdater.quitAndInstall();
+
+                } else {
+
+                    mainWindow.webContents.send("update-downloaded");
+
+                }
+                
             });
 
         };
