@@ -23,7 +23,6 @@ import {
 autoUpdater.logger = log;
 autoUpdater.setFeedURL({
     provider: 'github',
-    token: '0cbcebc2550c07518d97dc88acb0f629a8f25d28',
     owner: 'valentine195',
     repo: 'john-data-entry',
     private: true
