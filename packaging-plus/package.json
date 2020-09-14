@@ -1,0 +1,88 @@
+{
+	"name": "packaging-plus",
+	"productName": "Packaging Plus Invoice Entry",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"serve": "vue-cli-service serve",
+		"build": "vue-cli-service build",
+		"lint": "vue-cli-service lint",
+		"electron:build": "vue-cli-service electron:build",
+		"electron:serve": "cross-env NODE_ENV=development vue-cli-service electron:serve",
+		"postinstall": "electron-builder install-app-deps",
+		"postuninstall": "electron-builder install-app-deps",
+		"electron:generate-icons": "electron-icon-builder --input=./public/icon.png --output=build --flatten"
+	},
+	"main": "background.js",
+	"dependencies": {
+		"@fortawesome/fontawesome-free": "^5.13.0",
+		"bootstrap": "^4.4.1",
+		"core-js": "^3.6.5",
+		"electron-log": "^4.2.4",
+		"electron-updater": "^4.3.4",
+		"esm": "^3.2.25",
+		"exceljs": "^4.1.1",
+		"fs-jetpack": "^3.1.0",
+		"jquery": "^3.5.1",
+		"moment": "^2.27.0",
+		"popper.js": "^1.16.1",
+		"v-calendar": "^1.0.0-beta.23",
+		"vue": "^2.6.11",
+		"vue-notification": "^1.3.20",
+		"vue-router": "^3.1.6"
+	},
+	"devDependencies": {
+		"@vue/cli-plugin-babel": "~4.5.0",
+		"@vue/cli-plugin-eslint": "~4.5.0",
+		"@vue/cli-service": "~4.5.0",
+		"babel-eslint": "^10.1.0",
+		"cross-env": "^7.0.2",
+		"electron": "^9.0.0",
+		"electron-devtools-installer": "^3.1.0",
+		"electron-icon-builder": "^1.0.2",
+		"eslint": "^6.7.2",
+		"eslint-plugin-vue": "^6.2.2",
+		"pug": "^3.0.0",
+		"pug-plain-loader": "^1.0.0",
+		"vue-cli-plugin-electron-builder": "~2.0.0-rc.4",
+		"vue-template-compiler": "^2.6.11"
+	},
+	"build": {
+		"asarUnpack": [],
+		"appId": "packaging-plus",
+		"win": {
+			"icon": "./src/build/icons/icon.ico"
+		},
+		"nsis": {
+			"artifactName": "${productName}-Setup-${version}.${ext}",
+			"oneClick": true,
+			"perMachine": false,
+			"deleteAppDataOnUninstall": true,
+			"allowToChangeInstallationDirectory": false,
+			"runAfterFinish": true,
+			"differentialPackage": true
+		},
+		"files": [
+			"**/*",
+			"!dev_environment.js",
+			"!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+			"!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+			"!**/node_modules/*.d.ts",
+			"!**/node_modules/.bin",
+			"!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+			"!.editorconfig",
+			"!**/._*",
+			"!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+			"!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+			"!**/{appveyor.yml,.travis.yml,circle.yml}",
+			"!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+		],
+		"publish": [
+			{
+				"provider": "github",
+				"owner": "valentine195",
+				"repo": "john-data-entry"
+			}
+		]
+	}
+}
