@@ -11,14 +11,16 @@
 					v-for="type in types",
 					:key="type"
 				)
-					label(for="amount") #[strong {{ type }}]
+					label(:for="type.toCamelCase()") #[strong {{ type }}]
 					.input-group
 						.input-group-prepend
 							span.input-group-text $
-						input#amount.form-control(
+						input.form-control(
+							:id="type.toCamelCase()",
 							name="amount",
 							:placeholder="invoice[type]",
-							v-model.number="invoice[type]",
+							@input.number="invoice[type] = +$event.target.value",
+							@blur.number="invoice[type] = +$event.target.value",
 							type="number",
 							autocomplete="off"
 						)
@@ -46,7 +48,7 @@
 						)
 						label.form-check-label(:for="payment") {{ payment }}
 		.buttons.d-flex.justify-content-end
-			button.mr-2.btn.btn-outline-danger(type="cancel") Cancel
+			button.mr-2.btn.btn-outline-danger(type="cancel", @click="cancel") Cancel
 			button.btn.btn-primary(type="submit", @click="submit") Submit
 </template>
 
@@ -76,7 +78,7 @@ export default {
 				"Notary Fees",
 				"Sales Tax",
 			],
-			payments: ["Cash", "Check", "Credit"],
+			payments: ["Cash", "Check", "Credit", "Billed"],
 			invoice: {
 				Date: new Date(),
 				"UPS/FEDEX": 0,
@@ -108,15 +110,27 @@ export default {
 				this.types.forEach((t) => (this.invoice[t] = 0));
 				this.invoice.Date = new Date();
 				this.invoice.paymentType = "Credit";
+				this.invoice = { ...this.invoice };
+
+				this.clearInputs();
 			}
 		},
 		submit: function () {
 			ipcRenderer.send("invoice-submitted", { invoice: this.invoice });
 			this.types.forEach((t) => (this.invoice[t] = 0));
-			this.invoice.Date = new Date();
+			//this.invoice.Date = new Date();
 			this.invoice.paymentType = "Credit";
+			this.invoice = { ...this.invoice };
+
+			this.clearInputs();
+		},
+		clearInputs: function () {
+			this.types.forEach((type) => {
+				document.getElementById(type.toCamelCase()).value = "";
+			});
 		},
 	},
+	mounted() {},
 };
 </script>
 
