@@ -5,23 +5,22 @@ import InvoiceView from '../views/InvoiceView.vue'
 
 Vue.use(VueRouter)
 
-  const routes = [
-  {
-    path: '/',
-    name: 'Invoice Input',
-    component: InvoiceInput
-  },
-  {
-    path: '/view',
-    name: 'Invoice Viewer',
-    component: InvoiceView
-  }
+const routes = [{
+		path: '/',
+		name: 'Invoice Input',
+		component: InvoiceInput
+	},
+	{
+		path: '/view',
+		name: 'Invoice Viewer',
+		component: InvoiceView
+	}
 ]
 
 const router = new VueRouter({
-  mode: 'history',
-  base: process.env.BASE_URL,
-  routes
+	base: process.env.BASE_URL,
+	mode: process.env.IS_ELECTRON ? 'hash' : 'history',
+	routes
 })
 
 export default router

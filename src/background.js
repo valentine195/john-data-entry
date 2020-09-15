@@ -35,11 +35,17 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import {
+	TOKEN
+} from './github.json';
+
+const token = process.env.TOKEN || TOKEN;
+
+import {
 	request
 } from "@octokit/request";
 const octokit = request.defaults({
 	headers: {
-		authorization: `token ${process.env.TOKEN}`,
+		authorization: `token ${token}`,
 	},
 });
 
@@ -66,7 +72,6 @@ app.whenReady().then(async () => {
 
 	//Initialize user config
 	let config = await getUserConfig();
-	console.log("config", config)
 
 	if (isDevelopment && !process.env.IS_TEST) {
 		// Install Vue Devtools
@@ -228,8 +233,8 @@ async function createWindow() {
 		await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
 		if (!process.env.IS_TEST) win.webContents.openDevTools()
 	} else {
-		createProtocol('app')
 		// Load the index.html when not in development
+		createProtocol('app')
 		win.loadURL('app://./index.html')
 	}
 
