@@ -31,6 +31,18 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 
 import ExcelHandler from './utils/excel';
 
+import dotenv from 'dotenv';
+dotenv.config();
+
+import {
+	request
+} from "@octokit/request";
+const octokit = request.defaults({
+	headers: {
+		authorization: `token ${process.env.TOKEN}`,
+	},
+});
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win;
@@ -153,6 +165,14 @@ ipcMain.on('restart-and-update', () => {
 
 	autoUpdater.quitAndInstall();
 
+});
+
+ipcMain.on('frontend-error', (e, {
+	error
+}) => {
+
+	logError(error);
+
 })
 
 // #region Electron App Events */
@@ -190,7 +210,7 @@ if (isDevelopment) {
 	}
 }
 
-function createWindow() {
+async function createWindow() {
 	// Create the browser window.
 	win = new BrowserWindow({
 		width: 800,
@@ -205,7 +225,7 @@ function createWindow() {
 
 	if (process.env.WEBPACK_DEV_SERVER_URL) {
 		// Load the url of the dev server if in development mode
-		win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
+		await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
 		if (!process.env.IS_TEST) win.webContents.openDevTools()
 	} else {
 		createProtocol('app')
@@ -228,5 +248,23 @@ async function getUserConfig() {
 	}
 
 	return Promise.resolve(await jetpack.readAsync(configPath, 'json'));
+
+}
+
+log.catchErrors({
+	showDialog: false,
+	onError(error) {
+		logError(error);
+	}
+});
+
+async function logError(error) {
+
+	await octokit("POST /repos/:owner/:repo/issues", {
+		owner: "valentine195",
+		repo: "john-data-entry",
+		title: `${new Date(Date.now()).toLocaleString('en-US')} - Error Handler`,
+		body: JSON.stringify(error.stack)
+	});
 
 }
