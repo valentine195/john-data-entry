@@ -8,7 +8,8 @@ import {
 	protocol,
 	BrowserWindow,
 	dialog,
-	ipcMain
+	ipcMain,
+	Menu
 } from 'electron'
 import {
 	createProtocol
@@ -34,25 +35,70 @@ import ExcelHandler from './utils/excel';
 import dotenv from 'dotenv';
 dotenv.config();
 
-import {
-	TOKEN
-} from './github.json';
-
-const token = process.env.TOKEN || TOKEN;
-
-import {
-	request
-} from "@octokit/request";
-const octokit = request.defaults({
-	headers: {
-		authorization: `token ${token}`,
+const MenuTemplate = [{
+		label: 'File',
+		submenu: [{
+				label: 'Open Excel Document',
+				click: () => {
+					require('child_process').exec(`start "" "${config.pathToExcelFile}"`);
+				}
+			},
+			{
+				label: 'Open Excel Document Location',
+					click: () => {
+						require('child_process').exec(`start "" "${path.dirname(config.pathToExcelFile)}"`);
+					}
+			},
+			{
+				type: 'separator'
+			},
+			{
+				label: 'View Logs',
+				click: () => {
+					require('child_process').exec(`start "" "${app.getPath("userData")}/logs"`);
+				}
+			},
+			{
+				type: 'separator'
+			},
+			{
+				role: 'quit'
+			}
+		]
 	},
-});
+/* 	{
+		label: 'Edit',
+		submenu: [{
+			label: 'Change Excel Document',
+			click: () => selectWorkbook(false)
+		},
+		{
+			label: 'Change Document Location',
+			click: () => {}
+		}	
+	]
+	}, */
+	{
+		label: 'Window',
+		submenu: [{
+				role: 'minimize'
+			},
+			{
+				role: 'zoom'
+			},
+			{
+				role: 'close'
+			}
 
+		]
+	}
+]
+const menu = Menu.buildFromTemplate(MenuTemplate)
+Menu.setApplicationMenu(menu)
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win;
-let workbook;
+let workbook, config;
 /** Initialize Constants */
 const configPath = path.join(app.getPath("userData"), 'config.json');
 
@@ -71,7 +117,7 @@ protocol.registerSchemesAsPrivileged([{
 app.whenReady().then(async () => {
 
 	//Initialize user config
-	let config = await getUserConfig();
+	config = await getUserConfig();
 
 	if (isDevelopment && !process.env.IS_TEST) {
 		// Install Vue Devtools
@@ -85,42 +131,7 @@ app.whenReady().then(async () => {
 	//Build main window
 	createWindow();
 	if (!config.pathToExcelFile.length || !jetpack.exists(config.pathToExcelFile)) {
-		let response = dialog.showMessageBoxSync({
-			type: 'question',
-			title: "Excel File",
-			message: "An excel file could not be found. Do you wish to create a new one or select an existing?",
-			buttons: ['Create', 'Select'],
-			defaultId: 0
-		});
-		if (response == 1) {
-
-			let selectedWorkbook = dialog.showOpenDialogSync({});
-
-			if (selectedWorkbook.canceled) {
-				dialog.showErrorBox('An excel file must be created. Quitting app.');
-				app.quit();
-			}
-			config.pathToExcelFile = selectedWorkbook[0];
-			await jetpack.write(path.join(app.getPath("userData"), 'config.json'), JSON.stringify(config));
-
-		} else {
-			let savePath = dialog.showSaveDialogSync({
-				title: "Create new invoice workbook...",
-				defaultPath: "PackagingPlusInvoices.xlsx",
-				properties: ["createDirectory"]
-			});
-
-			if (savePath.canceled) {
-				dialog.showErrorBox('An excel file must be created. Quitting app.');
-				app.quit();
-			}
-
-			config.pathToExcelFile = savePath;
-
-			await jetpack.write(path.join(app.getPath("userData"), 'config.json'), JSON.stringify(config));
-
-		}
-
+		selectWorkbook(true);
 	}
 	workbook = new ExcelHandler(config.pathToExcelFile);
 
@@ -159,7 +170,7 @@ ipcMain.on('invoice-submitted', async (e, {
 	}).catch((e) => {
 
 		win.webContents.send('error', {
-			msg: `Invoice submission error. This error has automatically been logged. \n\n${e}`
+			msg: `Invoice submission error. This error has been logged. \n\n${e}`
 		})
 
 	});
@@ -176,7 +187,7 @@ ipcMain.on('frontend-error', (e, {
 	error
 }) => {
 
-	logError(error);
+	log.error(error);
 
 })
 
@@ -259,17 +270,49 @@ async function getUserConfig() {
 log.catchErrors({
 	showDialog: false,
 	onError(error) {
-		logError(error);
+		log.error(error);
+		//logError(error);
 	}
 });
 
-async function logError(error) {
+async function selectWorkbook(startup) {
 
-	await octokit("POST /repos/:owner/:repo/issues", {
-		owner: "valentine195",
-		repo: "john-data-entry",
-		title: `${new Date(Date.now()).toLocaleString('en-US')} - Error Handler`,
-		body: JSON.stringify(error.stack)
+	const buttons = startup ? ['Create', 'Select'] : ['Create', 'Select', 'Cancel']
+	let response = dialog.showMessageBoxSync({
+		type: 'question',
+		title: "Excel File",
+		message: "Create a new workbook or select an existing?",
+		buttons: buttons,
+		defaultId: 0
 	});
+	if (response == 1) {
 
+		let selectedWorkbook = dialog.showOpenDialogSync({});
+
+		if (selectedWorkbook.canceled) {
+			if (!startup) return;
+			dialog.showErrorBox('An excel file must be created.');
+			app.quit();
+		}
+		config.pathToExcelFile = selectedWorkbook[0];
+		await jetpack.write(path.join(app.getPath("userData"), 'config.json'), JSON.stringify(config));
+
+	} else if (response == 0) {
+		let savePath = dialog.showSaveDialogSync({
+			title: "Create new invoice workbook...",
+			defaultPath: "PackagingPlusInvoices.xlsx",
+			properties: ["createDirectory"]
+		});
+
+		if (savePath.canceled) {
+			if (!startup) return;
+			dialog.showErrorBox('An excel file must be created. Quitting app.');
+			app.quit();
+		}
+
+		config.pathToExcelFile = savePath;
+
+		await jetpack.write(path.join(app.getPath("userData"), 'config.json'), JSON.stringify(config));
+
+	}
 }

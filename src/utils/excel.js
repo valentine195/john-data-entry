@@ -1,6 +1,5 @@
 import Excel from 'exceljs';
 import jetpack from 'fs-jetpack';
-import fs from 'fs';
 
 
 export default class ExcelHandler {
@@ -44,11 +43,7 @@ export default class ExcelHandler {
 
 		if (!this.workbook.worksheets.find(w => w.name == thisMonthsWorksheet)) {
 
-			this.worksheet = await this.createSheet(thisMonthsWorksheet);
-
-		} else {
-
-			this.worksheet = this.workbook.worksheets.find(w => w.name == thisMonthsWorksheet);
+			await this.createSheet(thisMonthsWorksheet);
 
 		}
 
@@ -227,20 +222,44 @@ export default class ExcelHandler {
 	}
 
 	async insertData(data) {
+		
+		let worksheet, date = data[0];
 
+		let workSheetName = `${date.toLocaleString('default', { month: 'short' })}${date.toLocaleString('default', { year: 'numeric' })}`
 
-		this.worksheet.spliceRows(this.worksheet.lastRow.number - 1, 0, [
+		if (!this.workbook.worksheets.find(w => w.name == workSheetName)) {
+
+			worksheet = await this.createSheet(workSheetName);
+			let sheets = this.workbook.worksheets; //.map(sheet => [monthIndexes[sheet.name.substring(0, 3)], sheet.name.substring(3)]);
+			sheets.sort((sheet1, sheet2) => {
+				if (monthIndexes[sheet1.name.substring(0, 3)] + 1 * sheet1.name.substring(3) > monthIndexes[sheet2.name.substring(0, 3)] + 1 * sheet2.name.substring(3)) {
+					return 1;
+				} else {
+					return -1;
+				}
+			}).forEach((sheet, index) => {
+
+				let w = this.workbook.worksheets.find(w => w.name == sheet.name);
+				w.orderNo = index;
+
+			});
+
+		}
+
+		worksheet = this.workbook.worksheets.find(w => w.name == workSheetName);
+
+		worksheet.spliceRows(worksheet.lastRow.number - 1, 0, [
 			...data,
 			{
-				formula: `SUM($B$${this.worksheet.lastRow.number - 1}:$K$${this.worksheet.lastRow.number - 1})`
+				formula: `SUM($B$${worksheet.lastRow.number - 1}:$K$${worksheet.lastRow.number - 1})`
 			}
 		])
 
-		this.worksheet.lastRow.values = [
+		worksheet.lastRow.values = [
 			"Total",
 			...["B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"].map(l => {
 				return {
-					formula: `SUM($${l}$2:$${l}$${this.worksheet.lastRow.number - 1})`
+					formula: `SUM($${l}$2:$${l}$${worksheet.lastRow.number - 1})`
 				}
 			})
 		];
@@ -253,260 +272,17 @@ export default class ExcelHandler {
 
 }
 
-/* const workbook = new Excel.Workbook();
-let path;
-export var worksheet;
-
-export const loadWorkbook = async (p) => {
-
-	console.log('path', p);
-	path = p;
-
-	return new Promise(async (resolve, reject) => {
-
-		if (!jetpack.exists(path)) {
-
-			await saveWorkbook(path);
-
-		}
-
-		await workbook.xlsx.readFile(path);
-
-		let date = new Date();
-		let thisMonthsWorksheet = `${date.toLocaleString('default', { month: 'short' })}${date.toLocaleString('default', { year: 'numeric' })}`
-
-		if (!workbook.worksheets.find(w => w.name == thisMonthsWorksheet)) {
-
-			worksheet = await createSheet(thisMonthsWorksheet, workbook);
-
-		} else {
-
-			worksheet = workbook.worksheets.find(w => w.name == thisMonthsWorksheet);
-
-		}
-
-		workbook.eachSheet((s, id) => {
-
-			if (/(s|S)heet\s*\d+/.test(s.name) && workbook.worksheets.length > 1) workbook.removeWorksheet(id);
-
-		})
-
-		await saveWorkbook(path);
-
-		resolve(workbook);
-
-	});
-
+let monthIndexes = {
+	'Jan': 0,
+	'Feb': 1,
+	'Mar': 2,
+	'Apr': 3,
+	'May': 4,
+	'Jun': 5,
+	'Jul': 6,
+	'Aug': 7,
+	'Sep': 8,
+	'Oct': 9,
+	'Nov': 10,
+	'Dec': 11
 }
-
-export const createSheet = async (name, workbook) => {
-
-	return new Promise(async (resolve, reject) => {
-
-		const sheet = workbook.addWorksheet(name)
-
-		sheet.columns = [{
-				header: 'Invoice Date',
-				key: 'date',
-				width: 22,
-				style: {
-					font: {
-						bold: true
-					}
-				}
-			},
-			{
-				header: "UPS/FEDEX",
-				key: 'upsFedex',
-				width: 11,
-				style: {
-					font: {
-						bold: true
-					}
-				}
-			},
-			{
-				header: 'Carton Sales',
-				key: 'cartonSales',
-				width: 11,
-				style: {
-					font: {
-						bold: true
-					}
-				}
-			},
-			{
-				header: 'Labor',
-				key: 'labor',
-				width: 11,
-				style: {
-					font: {
-						bold: true
-					}
-				}
-			},
-			{
-				header: 'Warehouse',
-				key: 'warehouse',
-				width: 11,
-				style: {
-					font: {
-						bold: true
-					}
-				}
-			},
-			{
-				header: 'Shredding',
-				key: 'shredding',
-				width: 11,
-				style: {
-					font: {
-						bold: true
-					}
-				}
-			},
-			{
-				header: 'Printing',
-				key: 'printing',
-				width: 11,
-				style: {
-					font: {
-						bold: true
-					}
-				}
-			},
-			{
-				header: 'Fax',
-				key: 'fax',
-				width: 11,
-				style: {
-					font: {
-						bold: true
-					}
-				}
-			},
-			{
-				header: 'Rent',
-				key: 'rent',
-				width: 11,
-				style: {
-					font: {
-						bold: true
-					}
-				}
-			},
-			{
-				header: 'Notary Fees',
-				key: 'notaryFees',
-				width: 11,
-				style: {
-					font: {
-						bold: true
-					}
-				}
-			},
-			{
-				header: 'Sales Tax',
-				key: 'salesTax',
-				width: 11,
-				style: {
-					font: {
-						bold: true
-					}
-				}
-			},
-			{
-				header: 'Payment Type',
-				key: 'paymentType',
-				width: 11,
-				style: {
-					font: {
-						bold: true
-					}
-				}
-			},
-			{
-				header: 'Total',
-				key: 'total',
-				width: 11,
-				style: {
-					font: {
-						bold: true
-					}
-				}
-			}
-		];
-
-		sheet.columns = ["Date", "UPS/FEDEX", "Carton Sales", "Labor", "Warehouse", "Shredding", "Printing", "Fax", "Rent", "Notary Fees", "Sales Tax"].map(i => {
-			return {
-				header: i,
-				key: i
-			}
-		});
-		sheet.spliceRows(3, 0, [
-			"Total",
-			...["B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"].map(l => {
-				return {
-					formula: `SUM(${l}2:${l}2)`,
-					value: 0
-				}
-			})
-		])
-
-		resolve(sheet);
-	})
-
-}
-
-export const insertData = async (data, worksheet) => {
-
-	return new Promise(async (resolve, reject) => {
-
-		try {
-			worksheet.spliceRows(worksheet.lastRow.number - 1, 0, [
-				...data,
-				{
-					formula: `SUM($B$${worksheet.lastRow.number - 1}:$K$${worksheet.lastRow.number - 1})`
-				}
-			])
-
-			worksheet.lastRow.values = [
-				"Total",
-				...["B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"].map(l => {
-					return {
-						formula: `SUM($${l}$2:$${l}$${worksheet.lastRow.number - 1})`
-					}
-				})
-			];
-
-		} catch (e) {
-
-			reject(e);
-
-		}
-
-		await saveWorkbook(path);
-
-		resolve(worksheet);
-
-	});
-
-}
-
-export const saveWorkbook = async (path) => {
-
-	return new Promise(async (resolve, reject) => {
-
-		try {
-
-			await workbook.xlsx.writeFile(path);
-
-		} catch (e) {
-			reject(e)
-		}
-
-		resolve(workbook);
-
-	})
-
-} */
