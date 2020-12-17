@@ -139,12 +139,12 @@ app.whenReady().then(async () => {
 
 		autoUpdater.checkForUpdatesAndNotify();
 
-		autoUpdater.on('update-downloaded', (ev, {
+		autoUpdater.on('update-downloaded', (ev, update/* {
 			version
-		}) => {
-
+		} */) => {
+			console.log(update)
 			win.webContents.send("update-downloaded", {
-				version: version
+				version: update.version
 			});
 
 		});
