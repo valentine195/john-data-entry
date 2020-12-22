@@ -45,9 +45,9 @@ const MenuTemplate = [{
 			},
 			{
 				label: 'Open Excel Document Location',
-					click: () => {
-						require('child_process').exec(`start "" "${path.dirname(config.pathToExcelFile)}"`);
-					}
+				click: () => {
+					require('child_process').exec(`start "" "${path.dirname(config.pathToExcelFile)}"`);
+				}
 			},
 			{
 				type: 'separator'
@@ -66,18 +66,18 @@ const MenuTemplate = [{
 			}
 		]
 	},
-/* 	{
-		label: 'Edit',
-		submenu: [{
-			label: 'Change Excel Document',
-			click: () => selectWorkbook(false)
-		},
-		{
-			label: 'Change Document Location',
-			click: () => {}
-		}	
-	]
-	}, */
+	/* 	{
+			label: 'Edit',
+			submenu: [{
+				label: 'Change Excel Document',
+				click: () => selectWorkbook(false)
+			},
+			{
+				label: 'Change Document Location',
+				click: () => {}
+			}	
+		]
+		}, */
 	{
 		label: 'Window',
 		submenu: [{
@@ -139,12 +139,10 @@ app.whenReady().then(async () => {
 
 		autoUpdater.checkForUpdatesAndNotify();
 
-		autoUpdater.on('update-downloaded', (ev, update/* {
-			version
-		} */) => {
-			console.log(update)
+		autoUpdater.on('update-downloaded', (ev) => {
+			console.log(ev)
 			win.webContents.send("update-downloaded", {
-				version: update.version
+				version: ev.version
 			});
 
 		});
